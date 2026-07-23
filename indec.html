@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance System</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #f4f6f9; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        h2 { margin-bottom: 8px; color: #1a202c; font-size: 20px; }
+        h3 { margin-bottom: 16px; color: #718096; font-size: 15px; font-weight: normal; }
+        input, select, button { width: 100%; padding: 11px; margin-bottom: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; outline: none; }
+        button { background-color: #007bff; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-danger { background-color: #dc3545; }
+        .hidden { display: none !important; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 13px; }
+        th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: center; }
+        th { background-color: #edf2f7; }
+        .status-present { color: green; font-weight: bold; }
+        .status-absent { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. شاشة تسجيل الدخول -->
+    <div id="loginPage" class="card">
+        <h2>Student Attendance System</h2>
+        <h3>Login</h3>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <select id="userRole">
+            <option value="admin">System Manager</option>
+            <option value="leader">Batch Leader</option>
+        </select>
+        <button onclick="login()">Login</button>
+    </div>
+
+    <!-- 2. شاشة مدير النظام -->
+    <div id="adminPage" class="card hidden">
+        <h2>System Manager</h2>
+        <h3>Dashboard</h3>
+        <input type="text" id="studentName" placeholder="Student Name">
+        <input type="text" id="studentID" placeholder="Student ID">
+        <button onclick="addStudent()">Add Student</button>
+        <button class="btn-secondary" onclick="showReports()">Attendance Reports</button>
+        
+        <table id="studentTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody"></tbody>
+        </table>
+
+        <button class="btn-danger" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- 3. شاشة التقارير -->
+    <div id="reportsPage" class="card hidden">
+        <h2>Attendance Reports</h2>
+        <h3>تقارير حضور وغياب الطلاب</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>الرقم</th>
+                    <th>اسم الطالب</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody id="reportsTableBody"></tbody>
+        </table>
+
+        <button class="btn-secondary" onclick="backToAdmin()">Back to Dashboard</button>
+    </div>
+
+    <!-- 4. شاشة مندوب الدفعة -->
+    <div id="leaderPage" class="card hidden">
+        <h2>Batch Leader</h2>
+        <h3>Take Attendance</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceTableBody"></tbody>
+        </table>
+
+        <button onclick="saveAttendance()">Save Attendance</button>
+        <button class="btn-danger" onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        // قائمة الطلاب الحالية
+        var students = [
+            { id: "111", name: "سلمي سيد", status: "حاضر" },
+            { id: "112", name: "مديحة", status: "غائب" }
+        ];
+
+        function hideAll() {
+            document.getElementById("loginPage").classList.add("hidden");
+            document.getElementById("adminPage").classList.add("hidden");
+            document.getElementById("reportsPage").classList.add("hidden");
+            document.getElementById("leaderPage").classList.add("hidden");
+        }
+
+        function login() {
+            var role = document.getElementById("userRole").value;
+            hideAll();
+
+            if (role === "admin") {
+                document.getElementById("adminPage").classList.remove("hidden");
+                renderAdminTable();
+            } else if (role === "leader") {
+                document.getElementById("leaderPage").classList.remove("hidden");
+                renderLeaderTable();
+            }
+        }
+
+        function logout() {
+            hideAll();
+            document.getElementById("loginPage").classList.remove("hidden");
+        }
+
+        function addStudent() {
+            var name = document.getElementById("studentName").value;
+            var id = document.getElementById("studentID").value;
+
+            if(name && id) {
+                students.push({ id: id, name: name, status: "حاضر" });
+                renderAdminTable();
+                document.getElementById("studentName").value = "";
+                document.getElementById("studentID").value = "";
+                alert("تمت إضافة الطالب بنجاح!");
+            } else {
+                alert("يرجى كتابة الاسم والرقم الجامعي");
+            }
+        }
+
+        function renderAdminTable() {
+            var tbody = document.getElementById("studentTableBody");
+            tbody.innerHTML = "";
+            students.forEach(function(s) {
+                tbody.innerHTML += "<tr><td>" + s.id + "</td><td>" + s.name + "</td></tr>";
+            });
+        }
+
+        function showReports() {
+            hideAll();
+            document.getElementById("reportsPage").classList.remove("hidden");
+            
+            var tbody = document.getElementById("reportsTableBody");
+            tbody.innerHTML = "";
+            students.forEach(function(s) {
+                var statusClass = (s.status === "حاضر") ? "status-present" : "status-absent";
+                tbody.innerHTML += "<tr><td>" + s.id + "</td><td>" + s.name + "</td><td class='" + statusClass + "'>" + s.status + "</td></tr>";
+            });
+        }
+
+        function backToAdmin() {
+            hideAll();
+            document.getElementById("adminPage").classList.remove("hidden");
+        }
+
+        function renderLeaderTable() {
+            var tbody = document.getElementById("attendanceTableBody");
+            tbody.innerHTML = "";
+            students.forEach(function(s, index) {
+                var checked = (s.status === "حاضر") ? "checked" : "";
+                tbody.innerHTML += "<tr><td>" + s.name + "</td><td><input type='checkbox' id='chk_" + index + "' " + checked + " style='width:auto;'> حاضر</td></tr>";
+            });
+        }
+
+        function saveAttendance() {
+            students.forEach(function(s, index) {
+                var chk = document.getElementById("chk_" + index);
+                if(chk) {
+                    s.status = chk.checked ? "حاضر" : "غائب";
+                }
+            });
+            alert("تم حفظ سجل الحضور بنجاح!");
+        }
+    </script>
+
+</body>
+</html>
